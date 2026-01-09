@@ -7,12 +7,11 @@ const storage = new JsonStorage('./inventory.json');
 const estoque = new GerenciadorEstoque(storage);
 
 async function iniciarApp() {
-    await estoque.carregarDados();
-    mostrarBoasVindas();
-    await menuPrincipal(); // Inicia o loop
+    await estoque.carregarDados(); 
+    await menuPrincipal();
 }
 
-function mostrarBoasVindas() {
+function mostrarCabecalho() {
     console.clear();
     console.log(chalk.bold.green('========================================='));
     console.log(chalk.bold.green('       AGILSTORE - GESTÃO DE ESTOQUE    '));
@@ -20,74 +19,230 @@ function mostrarBoasVindas() {
 }
 
 async function menuPrincipal() {
-    const { opcao } = await inquirer.prompt([
+    mostrarCabecalho();
+    
+    console.log('1. Adicionar Produto');
+    console.log('2. Listar Produtos');
+    console.log('3. Atualizar Produto');
+    console.log('4. Excluir Produto');
+    console.log('5. Buscar Produto');
+    console.log('0. Sair\n');
+
+    const { escolha } = await inquirer.prompt([
         {
-            type: 'list',
-            name: 'opcao',
-            message: 'Selecione uma opção:',
-            choices: [
-                '1. Adicionar Produto',
-                '2. Listar Produtos',
-                '3. Atualizar Produto',
-                '4. Excluir Produto',
-                '5. Buscar Produto',
-                new inquirer.Separator(),
-                'Sair'
-            ]
+            type: 'input',
+            name: 'escolha',
+            message: 'Digite o número da opção desejada:'
         }
     ]);
 
-    switch (opcao) {
-        case '1. Adicionar Produto':
-            await telaAdicionar();
+    switch (escolha) {
+        case '1':
+            await telaAdicionar(); 
             break;
-        case '2. Listar Produtos':
-            await telaListar();
+        case '2':
+            await telaListar(); 
             break;
-        case '5. Buscar Produto':
-            await telaBuscar();
+        case '3':
+            await telaAtualizar(); 
             break;
-        case 'Sair':
-            console.log(chalk.yellow('\nSaindo... Dados salvos com segurança. '));
+        case '4':
+            await telaExcluir(); 
+            break;
+        case '5':
+            await telaBuscar(); 
+            break;
+        case '0':
+            console.log(chalk.yellow('\nSaindo... Dados salvos em JSON.'));
             process.exit();
             break;
+        default:
+            console.log(chalk.red('\nOpção inválida! Tente novamente.'));
+            await new Promise(res => setTimeout(res, 1000));
     }
 
-    // Chama o menu novamente para manter o app rodando
-    await menuPrincipal();
+    await menuPrincipal(); 
 }
 
 async function telaAdicionar() {
-    console.log(chalk.cyan('\n--- Cadastro de Novo Produto [cite: 11] ---'));
+    console.log(chalk.cyan('\n--- Cadastro de Novo Produto ---'));
     const dados = await inquirer.prompt([
-        { name: 'nome', message: 'Nome do Produto: [cite: 13]' },
-        { name: 'categoria', message: 'Categoria: [cite: 14]' },
-        { name: 'quantidade', message: 'Quantidade em Estoque: [cite: 15]', type: 'number' },
-        { name: 'preco', message: 'Preço: [cite: 16]', type: 'number' }
+        { name: 'nome', message: 'Nome do Produto:' }, 
+        { name: 'categoria', message: 'Categoria:' }, 
+        { name: 'quantidade', message: 'Quantidade:', type: 'number' }, 
+        { name: 'preco', message: 'Preço:', type: 'number' } 
     ]);
 
     await estoque.adicionar(dados);
     console.log(chalk.green('\n✔ Produto adicionado com sucesso!'));
+    await inquirer.prompt([{ type: 'input', name: 'p', message: 'Pressione Enter para voltar...' }]);
 }
 
+// REQUISITO 2: Listar Produtos com Filtro e Ordenação [cite: 17, 30]
 async function telaListar() {
-    console.log(chalk.cyan('\n--- Inventário Atual [cite: 17] ---'));
-    const produtos = estoque.listar();
-    if (produtos.length === 0) {
-        console.log(chalk.red('O estoque está vazio no momento. [cite: 42]'));
-    } else {
-        console.table(produtos); // Exibe colunas ID, Nome, Categoria, Qtd e Preço [cite: 18, 19, 20, 21, 22, 29]
+    console.log(chalk.cyan('\n--- Opções de Listagem ---'));
+    const { acao } = await inquirer.prompt([
+        {
+            type: 'input',
+            name: 'acao',
+            message: 'Deseja: (1) Listar tudo, (2) Filtrar por Categoria ou (3) Ordenar?',
+            default: '1'
+        }
+    ]);
+
+    let produtosParaExibir = [...estoque.listar()]; 
+
+    if (acao === '2') {
+        const { categoria } = await inquirer.prompt([{ name: 'categoria', message: 'Digite a categoria para filtrar:' }]);
+        produtosParaExibir = produtosParaExibir.filter(p => p.categoria.toLowerCase() === categoria.toLowerCase());
+    } else if (acao === '3') {
+        const { criterio } = await inquirer.prompt([
+            {
+                type: 'input',
+                name: 'criterio',
+                message: 'Ordenar por: (1) Nome, (2) Quantidade ou (3) Preço?',
+                default: '1'
+            }
+        ]);
+        
+        produtosParaExibir.sort((a, b) => {
+            if (criterio === '2') return a.quantidade - b.quantidade;
+            if (criterio === '3') return a.preco - b.preco;
+            return a.nome.localeCompare(b.nome);
+        });
     }
-    await inquirer.prompt([{ type: 'input', name: 'p', message: 'Pressione Enter para continuar...' }]);
+
+    if (produtosParaExibir.length === 0) {
+        console.log(chalk.red('\nNenhum produto encontrado.'));
+    } else {
+        console.log('\n');
+        // Exibe a tabela com as colunas exigidas: ID, Nome, Categoria, Qtd e Preço [cite: 18, 19, 20, 21, 22, 29]
+        console.table(produtosParaExibir.map(p => ({
+            ID: p.id,
+            'Nome do Produto': p.nome,
+            'Categoria': p.categoria,
+            'Qtd Estoque': p.quantidade,
+            'Preço': `R$ ${p.preco.toFixed(2)}`
+        })));
+    }
+
+    await inquirer.prompt([{ type: 'input', name: 'p', message: 'Pressione Enter para voltar ao menu...' }]);
 }
 
 async function telaBuscar() {
-    const { termo } = await inquirer.prompt([{ name: 'termo', message: 'Buscar por ID ou Nome: [cite: 40]' }]);
+    // Requisito: Permitir a busca por id ou por parte do nome do produto 
+    const { termo } = await inquirer.prompt([{ name: 'termo', message: 'Buscar por ID ou Nome:' }]); 
+    
     const resultados = estoque.buscar(termo);
+
     if (resultados.length > 0) {
-        console.table(resultados);
+        console.log(chalk.green(`\n${resultados.length} produto(s) encontrado(s):`));
+        
+        // Requisito: Exibir todas as informações detalhadas do produto encontrado 
+        // Mapeamos os dados para que os cabeçalhos da tabela sejam profissionais e em português 
+        console.table(resultados.map(p => ({
+            'ID': p.id,
+            'Nome do Produto': p.nome,
+            'Categoria': p.categoria,
+            'Quantidade em Estoque': p.quantidade,
+            'Preço': `R$ ${p.preco.toFixed(2)}`
+        })));
     } else {
-        console.log(chalk.red('\nNenhum produto encontrado. [cite: 42]'));
+        // Requisito: Exibir mensagem apropriada se nenhum produto for encontrado 
+        console.log(chalk.red('\nNenhum produto encontrado com o termo informado. Verifique o ID ou o nome.')); 
+    }
+
+    await inquirer.prompt([{ type: 'input', name: 'p', message: 'Pressione Enter para voltar...' }]);
+}
+
+// REQUISITO 3: Atualizar Produto [cite: 31]
+async function telaAtualizar() {
+    const { id } = await inquirer.prompt([{ name: 'id', message: 'Digite o ID do produto que deseja atualizar:' }]);
+    
+    const resultados = estoque.buscar(id);
+    const produto = resultados.find(p => p.id === id);
+
+    if (!produto) {
+        console.log(chalk.red('\nID não encontrado no inventário. [cite: 32]'));
+    } else {
+        console.log(chalk.cyan(`\nEditando: ${produto.nome}`));
+        
+        // Requisito: Solicitar quais campos deseja atualizar 
+        const { campos } = await inquirer.prompt([
+            {
+                type: 'checkbox',
+                name: 'campos',
+                message: 'Selecione os campos que deseja alterar:',
+                choices: [
+                    { name: 'Nome', value: 'nome' },
+                    { name: 'Categoria', value: 'categoria' },
+                    { name: 'Quantidade', value: 'quantidade' },
+                    { name: 'Preço', value: 'preco' }
+                ]
+            }
+        ]);
+
+        if (campos.length === 0) {
+            console.log(chalk.yellow('\nNenhuma alteração selecionada.'));
+        } else {
+            const perguntasEdicao = [];
+            
+            if (campos.includes('nome')) {
+                perguntasEdicao.push({ name: 'nome', message: 'Novo Nome:', default: produto.nome });
+            }
+            if (campos.includes('categoria')) {
+                perguntasEdicao.push({ name: 'categoria', message: 'Nova Categoria:', default: produto.categoria });
+            }
+            if (campos.includes('quantidade')) {
+                perguntasEdicao.push({ 
+                    name: 'quantidade', 
+                    message: 'Nova Quantidade:', 
+                    type: 'number', 
+                    default: produto.quantidade,
+                    validate: (v) => v >= 0 || 'A quantidade não pode ser negativa.' // Requisito: Validar dados 
+                });
+            }
+            if (campos.includes('preco')) {
+                perguntasEdicao.push({ 
+                    name: 'preco', 
+                    message: 'Novo Preço:', 
+                    type: 'number', 
+                    default: produto.preco,
+                    validate: (v) => v >= 0 || 'O preço não pode ser negativo.' // Requisito: Validar dados 
+                });
+            }
+
+            const novosDados = await inquirer.prompt(perguntasEdicao);
+            
+            // Mescla os dados antigos com os novos
+            const produtoFinal = { ...produto, ...novosDados };
+            
+            await estoque.atualizar(id, produtoFinal); 
+            console.log(chalk.green('\n✔ Produto atualizado com sucesso! '));
+        }
+    }
+    await inquirer.prompt([{ type: 'input', name: 'p', message: 'Pressione Enter para continuar...' }]);
+}
+// Requisito 4: Excluir Produto [cite: 35]
+async function telaExcluir() {
+    const { id } = await inquirer.prompt([{ name: 'id', message: 'Digite o ID do produto para remover:' }]);
+    
+    const resultados = estoque.buscar(id);
+    const produto = resultados.find(p => p.id === id);
+
+    if (!produto) {
+        console.log(chalk.red('\nID não encontrado.'));
+    } else {
+        const { confirmar } = await inquirer.prompt([
+            { type: 'confirm', name: 'confirmar', message: `Tem certeza que deseja excluir "${produto.nome}"?`, default: false }
+        ]);
+
+        if (confirmar) {
+            await estoque.excluir(id); 
+            console.log(chalk.green('\n✔ Produto removido com sucesso!'));
+        } else {
+            console.log(chalk.yellow('\nOperação cancelada.'));
+        }
     }
     await inquirer.prompt([{ type: 'input', name: 'p', message: 'Pressione Enter para continuar...' }]);
 }

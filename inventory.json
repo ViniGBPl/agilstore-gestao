@@ -1,0 +1,23 @@
+[
+  {
+    "id": "1ae0c889",
+    "nome": "banana1",
+    "categoria": "carga",
+    "quantidade": 100,
+    "preco": 1050
+  },
+  {
+    "id": "989edc4c",
+    "nome": "massa2",
+    "categoria": "fruta",
+    "quantidade": 1,
+    "preco": 1
+  },
+  {
+    "id": "db0a067a",
+    "nome": "bana",
+    "categoria": "cas",
+    "quantidade": 1,
+    "preco": 4
+  }
+]
