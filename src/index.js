@@ -78,7 +78,7 @@ async function telaAdicionar() {
     await inquirer.prompt([{ type: 'input', name: 'p', message: 'Pressione Enter para voltar...' }]);
 }
 
-// REQUISITO 2: Listar Produtos com Filtro e Ordenação [cite: 17, 30]
+//Listar Produtos com Filtro e Ordenação [cite: 17, 30]
 async function telaListar() {
     console.log(chalk.cyan('\n--- Opções de Listagem ---'));
     const { acao } = await inquirer.prompt([
@@ -116,7 +116,7 @@ async function telaListar() {
         console.log(chalk.red('\nNenhum produto encontrado.'));
     } else {
         console.log('\n');
-        // Exibe a tabela com as colunas exigidas: ID, Nome, Categoria, Qtd e Preço [cite: 18, 19, 20, 21, 22, 29]
+        // Exibe a tabela com as colunas exigidas: ID, Nome, Categoria, Qtd e Preço 
         console.table(produtosParaExibir.map(p => ({
             ID: p.id,
             'Nome do Produto': p.nome,
@@ -130,7 +130,7 @@ async function telaListar() {
 }
 
 async function telaBuscar() {
-    // Requisito: Permitir a busca por id ou por parte do nome do produto 
+    // Permitir a busca por id ou por parte do nome do produto 
     const { termo } = await inquirer.prompt([{ name: 'termo', message: 'Buscar por ID ou Nome:' }]); 
     
     const resultados = estoque.buscar(termo);
@@ -138,8 +138,8 @@ async function telaBuscar() {
     if (resultados.length > 0) {
         console.log(chalk.green(`\n${resultados.length} produto(s) encontrado(s):`));
         
-        // Requisito: Exibir todas as informações detalhadas do produto encontrado 
-        // Mapeamos os dados para que os cabeçalhos da tabela sejam profissionais e em português 
+        // Exibir todas as informações detalhadas do produto encontrado 
+        // Mapeamos os dados 
         console.table(resultados.map(p => ({
             'ID': p.id,
             'Nome do Produto': p.nome,
@@ -148,14 +148,14 @@ async function telaBuscar() {
             'Preço': `R$ ${p.preco.toFixed(2)}`
         })));
     } else {
-        // Requisito: Exibir mensagem apropriada se nenhum produto for encontrado 
+        // Exibir mensagem apropriada se nenhum produto for encontrado 
         console.log(chalk.red('\nNenhum produto encontrado com o termo informado. Verifique o ID ou o nome.')); 
     }
 
     await inquirer.prompt([{ type: 'input', name: 'p', message: 'Pressione Enter para voltar...' }]);
 }
 
-// REQUISITO 3: Atualizar Produto [cite: 31]
+// Atualizar Produto
 async function telaAtualizar() {
     const { id } = await inquirer.prompt([{ name: 'id', message: 'Digite o ID do produto que deseja atualizar:' }]);
     
@@ -167,7 +167,7 @@ async function telaAtualizar() {
     } else {
         console.log(chalk.cyan(`\nEditando: ${produto.nome}`));
         
-        // Requisito: Solicitar quais campos deseja atualizar 
+        // Solicitar quais campos deseja atualizar 
         const { campos } = await inquirer.prompt([
             {
                 type: 'checkbox',
@@ -223,7 +223,7 @@ async function telaAtualizar() {
     }
     await inquirer.prompt([{ type: 'input', name: 'p', message: 'Pressione Enter para continuar...' }]);
 }
-// Requisito 4: Excluir Produto [cite: 35]
+// Excluir Produto 
 async function telaExcluir() {
     const { id } = await inquirer.prompt([{ name: 'id', message: 'Digite o ID do produto para remover:' }]);
     

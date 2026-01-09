@@ -13,14 +13,14 @@ export class GerenciadorEstoque {
     this.produtos = dadosBrutos.map(p => new Produto(p.nome, p.categoria, p.quantidade, p.preco, p.id));
   }
 
-  // Requisito 1: Adicionar Produto 
+  //  Adicionar Produto 
   async adicionar(dados) {
     const novoProduto = new Produto(dados.nome, dados.categoria, dados.quantidade, dados.preco);
     this.produtos.push(novoProduto);
     await this.storage.salvar(this.produtos); // Salvamento automático 
   }
 
-  // Requisito 2: Listar Produtos [cite: 18]
+  // Listar Produtos 
   listar() {
     return this.produtos;
   }
@@ -28,7 +28,7 @@ export class GerenciadorEstoque {
   buscar(termo) {
     const termoBusca = termo.toLowerCase();
 
-    // 1. Tenta encontrar um match EXATO (por ID ou Nome completo)
+    // Tenta encontrar um match EXATO (por ID ou Nome completo)
     const matchExato = this.produtos.filter(p => 
         p.id === termo || p.nome.toLowerCase() === termoBusca
     );
@@ -38,18 +38,18 @@ export class GerenciadorEstoque {
         return matchExato;
     }
 
-    // 2. Se não houver match exato, retorna por parte do nome (conforme requisito 5)
+    // 2. Se não houver match exato, retorna por parte do nome 
     return this.produtos.filter(p => 
         p.nome.toLowerCase().includes(termoBusca)
     );
 }
 
  
-  // REQUISITO 3: Atualizar informações de um produto existente [cite: 31]
+  // Atualizar informações de um produto existente 
   async atualizar(id, novosDados) {
     const index = this.produtos.findIndex(p => p.id === id);
     if (index !== -1) {
-      // Validação dos novos dados antes de salvar [cite: 34]
+      // Validação dos novos dados antes de salvar 
       const produtoAtualizado = {
         ...this.produtos[index],
         nome: novosDados.nome,
@@ -59,18 +59,18 @@ export class GerenciadorEstoque {
       };
       
       this.produtos[index] = produtoAtualizado;
-      await this.storage.salvar(this.produtos); // Persistência automática [cite: 45]
+      await this.storage.salvar(this.produtos); // Persistência automática 
       return true;
     }
     return false;
   }
 
-  // REQUISITO 4: Remover um produto do inventário [cite: 35]
+  //Remover um produto do inventário 
   async excluir(id) {
     const index = this.produtos.findIndex(p => p.id === id);
     if (index !== -1) {
       this.produtos.splice(index, 1); // Remover o produto 
-      await this.storage.salvar(this.produtos); // Persistência automática [cite: 45]
+      await this.storage.salvar(this.produtos); // Persistência automática 
       return true;
     }
     return false;
