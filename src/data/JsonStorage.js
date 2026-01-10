@@ -16,7 +16,7 @@ export class JsonStorage {
     }
   }
 
-  // Salva os dados no arquivo formatados para fácil leitura humana
+  // Salva os dados no arquivo formatados 
   async salvar(dados) {
     try {
       await fs.writeFile(this.filePath, JSON.stringify(dados, null, 2));
